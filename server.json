@@ -1,0 +1,11 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.jabran/ifrs15-revenue-agent",
+  "title": "IFRS 15 Revenue Recognition Agent",
+  "description": "The five-step model end to end: contracts, performance obligations, variable consideration,...",
+  "version": "1.0.0",
+  "repository": {
+    "url": "https://github.com/jabran/ifrs15-revenue-agent",
+    "source": "github"
+  }
+}

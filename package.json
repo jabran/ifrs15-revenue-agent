@@ -1,0 +1,14 @@
+{
+  "name": "ifrs15-revenue-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "IFRS 15 Revenue Recognition Agent: The five-step model end to end: contracts, performance obligations, variable consideration, allocation, over-time revenue, costs and returns. Demo and educational use only.",
+  "scripts": {
+    "start": "node dist/server.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "SEE LICENSE IN LICENSE.md"
+}

@@ -1,0 +1,671 @@
+{
+  "serverInfo": {
+    "name": "ifrs15-revenue-agent",
+    "title": "IFRS 15 Revenue Recognition Agent",
+    "version": "1.0.0"
+  },
+  "description": "The five-step model end to end: contracts, performance obligations, variable consideration, allocation, over-time revenue, costs and returns. Demo and educational use only. No liability assumed for results. Not professional advice.",
+  "transport": {
+    "type": "stdio",
+    "command": "node",
+    "args": [
+      "dist/server.mjs"
+    ]
+  },
+  "capabilities": {
+    "tools": {},
+    "prompts": {},
+    "resources": {}
+  },
+  "tools": [
+    {
+      "name": "agent_about",
+      "title": "IFRS 15 Revenue Recognition Agent: what this agent covers",
+      "description": "Lists the standards and tools in this agent, the order to use them in, and the terms of use.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_contract_and_modification",
+      "title": "IFRS 15: Step 1: contract & modifications (9-21)",
+      "description": "Tests the five contract criteria (9) and accounts for a contract modification (18-21): a separate contract when distinct goods are added at stand-alone selling prices; otherwise a prospective termination-and-new-contract (blended price for remaining distinct goods) or a cumulative catch-up adjustment for a partially satisfied single performance obligation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Contract"
+          },
+          "approvedAndCommitted": {
+            "type": "boolean",
+            "description": "(a) Approved and parties committed [IFRS 15.9(a)]",
+            "default": true
+          },
+          "rightsIdentifiable": {
+            "type": "boolean",
+            "description": "(b) Each party's rights identifiable [IFRS 15.9(b)]",
+            "default": true
+          },
+          "paymentTermsIdentifiable": {
+            "type": "boolean",
+            "description": "(c) Payment terms identifiable [IFRS 15.9(c)]",
+            "default": true
+          },
+          "commercialSubstance": {
+            "type": "boolean",
+            "description": "(d) Commercial substance [IFRS 15.9(d)]",
+            "default": true
+          },
+          "collectionProbable": {
+            "type": "boolean",
+            "description": "(e) Collection of consideration probable [IFRS 15.9(e)]",
+            "default": true
+          },
+          "modification": {
+            "type": "string",
+            "enum": [
+              "none",
+              "assess"
+            ],
+            "description": "Is there a contract modification? Options: none (No); assess (Yes: assess it)",
+            "default": "none"
+          },
+          "addsDistinctGoods": {
+            "type": "boolean",
+            "description": "Adds distinct goods or services [IFRS 15.20(a)]",
+            "default": false
+          },
+          "priceReflectsSsp": {
+            "type": "boolean",
+            "description": "Price increase reflects their stand-alone selling prices [IFRS 15.20(b)]",
+            "default": false
+          },
+          "remainingDistinctFromTransferred": {
+            "type": "boolean",
+            "description": "Remaining goods/services are distinct from those already transferred [IFRS 15.21(a)]",
+            "default": true
+          },
+          "unrecognisedOriginalConsideration": {
+            "type": "number",
+            "description": "Prospective: original consideration not yet recognised [IFRS 15.21(a)]",
+            "default": 0
+          },
+          "remainingOriginalUnits": {
+            "type": "number",
+            "description": "Prospective: remaining units under the original contract",
+            "default": 0
+          },
+          "addedUnits": {
+            "type": "number",
+            "description": "Units added by the modification",
+            "default": 0
+          },
+          "addedConsideration": {
+            "type": "number",
+            "description": "Consideration added by the modification",
+            "default": 0
+          },
+          "originalTotalPrice": {
+            "type": "number",
+            "description": "Catch-up: original transaction price [IFRS 15.21(b)]",
+            "default": 0
+          },
+          "modifiedTotalPrice": {
+            "type": "number",
+            "description": "Catch-up: modified transaction price",
+            "default": 0
+          },
+          "progressAfterModification": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Catch-up: measure of progress after modification (decimal)",
+            "default": 0
+          },
+          "revenueRecognisedToDate": {
+            "type": "number",
+            "description": "Catch-up: revenue recognised to date",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_performance_obligations",
+      "title": "IFRS 15: Step 2: performance obligations (22-30)",
+      "description": "Identifies performance obligations from the promised goods and services: distinct if capable of being distinct and distinct in the context of the contract (27-29), series of substantially the same goods or services (22(b)), customer options that are material rights (B40), and principal versus agent (B34-B38). Non-distinct promises are combined into a single obligation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Contract"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "type": "string",
+                  "description": "Good / service / option"
+                },
+                "capableOfBeingDistinct": {
+                  "type": "boolean",
+                  "description": "Capable of being distinct (27(a))",
+                  "default": true
+                },
+                "distinctInContext": {
+                  "type": "boolean",
+                  "description": "Separately identifiable in the contract (27(b), 29)",
+                  "default": true
+                },
+                "seriesOfSubstantiallySame": {
+                  "type": "boolean",
+                  "description": "Series of substantially the same items (22(b))",
+                  "default": false
+                },
+                "materialRight": {
+                  "type": "boolean",
+                  "description": "Option giving a material right (B40)",
+                  "default": false
+                },
+                "controlledBeforeTransfer": {
+                  "type": "boolean",
+                  "description": "Entity controls it before transfer (principal)",
+                  "default": true
+                }
+              },
+              "required": [
+                "item"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Promises"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_transaction_price",
+      "title": "IFRS 15: Step 3: transaction price (47-72)",
+      "description": "Determines the transaction price: fixed consideration, variable consideration estimated by expected value or most likely amount (53) and constrained to the amount highly probable not to reverse (56), adjustment for a significant financing component when payment and transfer are more than a year apart (60-65), non-cash consideration at fair value (66) and consideration payable to the customer (70-72).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Contract"
+          },
+          "fixedConsideration": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Fixed consideration",
+            "default": 0
+          },
+          "nonCashConsiderationFairValue": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Non-cash consideration at fair value [IFRS 15.66]",
+            "default": 0
+          },
+          "considerationPayableToCustomer": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Consideration payable to the customer (credits, coupons, slotting fees) [IFRS 15.70]",
+            "default": 0
+          },
+          "payableIsForDistinctGood": {
+            "type": "boolean",
+            "description": "That payment is for a distinct good or service from the customer [IFRS 15.70, IFRS 15.71]",
+            "default": false
+          },
+          "variableMethod": {
+            "type": "string",
+            "enum": [
+              "expected_value",
+              "most_likely"
+            ],
+            "description": "Estimation method [IFRS 15.53] Options: expected_value (Expected value (many outcomes)); most_likely (Most likely amount (binary outcomes))",
+            "default": "expected_value"
+          },
+          "highlyProbableThreshold": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 1,
+            "description": "Policy: 'highly probable' as a probability (decimal) [IFRS 15.56]",
+            "default": 0.8
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "outcome": {
+                  "type": "string",
+                  "description": "Outcome"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Variable amount"
+                },
+                "probability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Probability (decimal)"
+                }
+              },
+              "required": [
+                "outcome",
+                "amount",
+                "probability"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Variable outcomes",
+            "default": []
+          },
+          "monthsBetweenTransferAndPayment": {
+            "type": "number",
+            "description": "Months between transfer and payment (+ customer pays later, − pays in advance) [IFRS 15.63]",
+            "default": 0
+          },
+          "financingRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Rate for a separate financing transaction with the customer (decimal) [IFRS 15.64]",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_allocation",
+      "title": "IFRS 15: Step 4: allocation (73-86)",
+      "description": "Allocates the transaction price to performance obligations on a relative stand-alone selling price basis (74-80), with the residual approach for one obligation where permitted (79(c)), a discount allocated proportionately or to specific obligations when observable evidence supports it (81-83), and variable consideration allocated entirely to one obligation when its terms relate specifically to it (84-86).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Contract"
+          },
+          "transactionPrice": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Transaction price (including variable amount)"
+          },
+          "variableAmount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Variable consideration to allocate specifically (0 if none) [IFRS 15.85]",
+            "default": 0
+          },
+          "variableAllocatedTo": {
+            "type": "string",
+            "description": "Obligation the variable amount relates to",
+            "default": ""
+          },
+          "discountAllocation": {
+            "type": "string",
+            "enum": [
+              "proportionate",
+              "specific"
+            ],
+            "description": "Discount allocation Options: proportionate (Proportionately to all obligations (81)); specific (To specific obligations (82: observable evidence))",
+            "default": "proportionate"
+          },
+          "discountRelatesTo": {
+            "type": "string",
+            "description": "Obligations the discount relates to (comma-separated)",
+            "default": ""
+          },
+          "obligations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "po": {
+                  "type": "string",
+                  "description": "Performance obligation"
+                },
+                "ssp": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "Stand-alone selling price [IFRS 15.77, IFRS 15.78, IFRS 15.79]",
+                  "default": 0
+                },
+                "residual": {
+                  "type": "boolean",
+                  "description": "SSP by residual approach [IFRS 15.79(c)]",
+                  "default": false
+                }
+              },
+              "required": [
+                "po"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1,
+            "description": "Obligations"
+          }
+        },
+        "required": [
+          "transactionPrice",
+          "obligations"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_over_time_revenue",
+      "title": "IFRS 15: Step 5: over-time revenue & progress (35-45, B19)",
+      "description": "Tests the three over-time criteria (35); if met, measures progress with a cost-to-cost input method, excluding uninstalled materials that do not depict performance and recognising revenue equal to their cost (B19), and computes cumulative and period revenue, cost, margin, the contract asset or liability against billings, and the onerous contract check.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Construction contract"
+          },
+          "customerConsumesAsPerformed": {
+            "type": "boolean",
+            "description": "(a) Customer simultaneously receives and consumes the benefits [IFRS 15.35(a)]",
+            "default": false
+          },
+          "customerControlsAssetAsCreated": {
+            "type": "boolean",
+            "description": "(b) Customer controls the asset as it is created or enhanced [IFRS 15.35(b)]",
+            "default": true
+          },
+          "noAlternativeUse": {
+            "type": "boolean",
+            "description": "(c) Asset has no alternative use to the entity [IFRS 15.35(c), IFRS 15.36]",
+            "default": false
+          },
+          "enforceableRightToPayment": {
+            "type": "boolean",
+            "description": "(c) Enforceable right to payment for performance to date [IFRS 15.35(c), IFRS 15.37]",
+            "default": false
+          },
+          "transactionPrice": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Transaction price"
+          },
+          "totalExpectedCosts": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Total expected costs (including uninstalled materials)"
+          },
+          "costsIncurredToDate": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Costs incurred to date (excluding uninstalled materials)"
+          },
+          "uninstalledMaterialsCost": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Cost of uninstalled materials (e.g. specialised equipment) [IFRS 15.B19(b)]",
+            "default": 0
+          },
+          "uninstalledMaterialsTransferred": {
+            "type": "boolean",
+            "description": "Control of those materials has transferred to the customer [IFRS 15.B19(b)]",
+            "default": true
+          },
+          "revenueRecognisedPriorPeriods": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Revenue recognised in prior periods",
+            "default": 0
+          },
+          "billingsToDate": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Amounts billed to date [IFRS 15.105]",
+            "default": 0
+          }
+        },
+        "required": [
+          "transactionPrice",
+          "totalExpectedCosts",
+          "costsIncurredToDate"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_contract_costs",
+      "title": "IFRS 15: Costs of obtaining a contract (91-104)",
+      "description": "Determines whether the incremental costs of obtaining a contract (e.g. sales commissions) are capitalised (91-93) or expensed under the one-year practical expedient (94), excludes costs incurred regardless of whether the contract is obtained, amortises the asset straight-line over the period of transfer including anticipated renewals (99), and tests it for impairment (101).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract": {
+            "type": "string",
+            "description": "Contract",
+            "default": "Contract"
+          },
+          "incrementalCostOfObtaining": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Incremental costs (would not have been incurred without the contract) [IFRS 15.91, IFRS 15.92]"
+          },
+          "costIncurredRegardless": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Costs incurred regardless (e.g. legal fees for due diligence, travel) [IFRS 15.93]",
+            "default": 0
+          },
+          "expectedToBeRecovered": {
+            "type": "boolean",
+            "description": "Costs are expected to be recovered [IFRS 15.91]",
+            "default": true
+          },
+          "amortisationPeriodYears": {
+            "type": "number",
+            "minimum": 0.01,
+            "description": "Amortisation period incl. anticipated renewals (years) [IFRS 15.94, IFRS 15.99]"
+          },
+          "yearsElapsed": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Years elapsed at reporting date",
+            "default": 0
+          },
+          "remainingConsideration": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Remaining consideration expected (impairment test) [IFRS 15.101]",
+            "default": 0
+          },
+          "costsStillToProvide": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Costs still to be incurred to provide the goods/services [IFRS 15.101]",
+            "default": 0
+          }
+        },
+        "required": [
+          "incrementalCostOfObtaining",
+          "amortisationPeriodYears"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_disclosure_checklist",
+      "title": "IFRS 15: Disclosure checklist (110-129)",
+      "description": "Generates the tailored IFRS 15 disclosure checklist (paragraphs 110-129).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "remainingObligations": {
+            "type": "boolean",
+            "description": "Unsatisfied performance obligations at the reporting date (contracts over one year) [IFRS 15.120]",
+            "default": true
+          },
+          "contractCosts": {
+            "type": "boolean",
+            "description": "Contract cost assets recognised [IFRS 15.127]",
+            "default": true
+          },
+          "expedients": {
+            "type": "boolean",
+            "description": "Practical expedients used (financing, incremental costs) [IFRS 15.129]",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_lookup",
+      "title": "IFRS 15: Paragraph & topic lookup",
+      "description": "Searches the IFRS 15 knowledge base by paragraph number or keywords and returns paraphrased requirements with paragraph citations, so answers can be grounded and cited.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Paragraph number or keywords"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "ifrs15_right_of_return",
+      "title": "IFRS 15: Sale with a right of return (B20-B27)",
+      "description": "For products sold with a right of return, recognises revenue only for products not expected to be returned (expected value, subject to the constraint), a refund liability for the consideration expected to be refunded, and an asset for the right to recover products measured at former carrying amount less expected recovery costs, with cost of sales reduced accordingly.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "unitsSold": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Units sold"
+          },
+          "pricePerUnit": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Price per unit"
+          },
+          "costPerUnit": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Cost per unit (inventory carrying amount)"
+          },
+          "expectedReturnRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Expected return rate (after applying the constraint) [IFRS 15.56, IFRS 15.B23]"
+          },
+          "recoveryCostPerUnit": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Expected cost to recover each returned unit, including value impairment [IFRS 15.B25]",
+            "default": 0
+          }
+        },
+        "required": [
+          "unitsSold",
+          "pricePerUnit",
+          "costPerUnit",
+          "expectedReturnRate"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
