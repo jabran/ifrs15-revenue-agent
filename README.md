@@ -1,5 +1,7 @@
 # IFRS 15 Revenue Recognition Agent
 
+[![IFRS 15 Revenue Recognition Agent MCP server](https://mcprush.com/badge/ifrs-15-revenue-recognition-agent-mcp/card.svg)](https://mcprush.com/to/ifrs-15-revenue-recognition-agent-mcp?ref=badge)
+
 The five-step model end to end: contracts, performance obligations, variable consideration, allocation, over-time revenue, costs and returns.
 
 > FOR DEMONSTRATION AND EDUCATIONAL PURPOSES ONLY. This output is not accounting, audit, tax or legal advice, and no liability whatsoever is assumed for its results or for any decision based on them. Paragraph references point to the IFRS Accounting Standards issued by the IASB; the standards' text is not reproduced. Results depend entirely on the facts entered and must be independently verified by a qualified professional against the current authoritative text before any use.
